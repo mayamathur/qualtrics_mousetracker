@@ -1,0 +1,9 @@
+/* Centers buttons */
+	.Skin #Buttons {
+	text-align: center;
+	padding: 20px;
+	margin-top: 50px;
+}
+
+/* Fix window size so that distance between buttons is standardized */
+.Skin .SkinInner {min-width: 1200px!important;}

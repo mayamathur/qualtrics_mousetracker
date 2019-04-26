@@ -1,0 +1,310 @@
+---
+title: ''
+author: ''
+csl: apa.csl
+output:
+  pdf_document:
+    number_sections: yes
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes:
+- \usepackage[T1]{fontenc}
+- \usepackage{microtype}
+- \usepackage[margin=1in]{geometry}
+- \usepackage{fancyhdr}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead{}
+- \fancyfoot{}
+- \fancyhead[C]{Mouse-tracking in Qualtrics}
+- \fancyfoot[RO,LE]{\thepage}
+- \usepackage{booktabs}
+- \usepackage{lettrine}
+- \usepackage{paralist}
+- \usepackage{setspace}\singlespacing
+- \usepackage{url}
+- \usepackage{parskip}
+- \usepackage{color,soul}
+- \usepackage{palatino}
+- \usepackage{booktabs}
+- \usepackage{makecell}
+- \usepackage{float}
+bibliography: refs_uv3.bib
+---
+
+\doublespacing
+
+\begin{center}
+\textbf{ \LARGE{Mouse-tracking in Qualtrics to measure category competition: An open-source software pipeline} }
+\vspace{10mm}
+\end{center}
+
+\doublespacing
+
+\vspace{10mm}
+\begin{center}
+\large{ \emph{ Maya B. Mathur and David B. Reichling } } \\
+\today
+\end{center}
+
+\vspace{10mm}
+
+
+
+\setlength{\parskip}{1em}
+
+
+\singlespacing
+
+Alternative titles:
+
+* Open-source software to track mouse trajectories in Qualtrics
+
+* Open-source software for mouse-tracking in Qualtrics to measure category competition
+
+
+\section*{Abstract}
+
+Mouse-tracking is a sophisticated tool for measuring rapid, dynamic cognitive processes in real time, particularly in experiments investigating competition between perceptual or cognitive categories. We provide user-friendly, open-source software (\url{https://osf.io/st2ef/}) for designing and analyzing such experiments online using Qualtrics. The software consists of a Qualtrics template with embedded Javascript \color{red}and CSS \color{black} along with R code to clean, parse, and analyze the data. No special programming skills are required to use this software. We empirically demonstrate the concurrent validity of the provided software by benchmarking its performance on previously tested stimuli in a standard category-competition experiment with realistic crowdsourced data collection. 
+
+```{r echo = FALSE, message = FALSE}
+results.dir = "~/Dropbox/Personal computer/Independent studies/Uncanny Valley III (UV3)/Qualtrics Mousetracker (OSF)/Validation study/Results"
+setwd(results.dir)
+load( file = "all_data_prep_objects.RData")
+load( file = "all_analysis_objects.RData")
+```
+
+
+\section{Introduction}
+
+\emph{About 3135 words}
+
+Capturing rapid, dynamic cognitive processes that may lie outside subjective awareness is a key methodological task in several realms of experimental psychology. One promising method for gaining insight into these processes is to analyze the trajectories of subjects' mouse cursors as they complete experimental tasks [@freeman_more]. For example, in tasks in which subjects must rapidly categorize stimuli (such as faces) into mutually exclusive, binary categories (such as "male" and "female"), the trajectories of subjects' mouse cursors as they attempt to rapidly select a category button can serve as direct physical manifestations of cognitive competition between the categories. Stimuli that are difficult to categorize because they are intermediate between the two categories or are atypical exemplars of their category, such as gender-atypical faces, tend to produce mouse trajectories that differ markedly from those produced by stimuli that fall clearly into one category [@dale_graded; @freeman_cue; @freeman_race]. That is, the trajectories produced when subjects attempt to categorize ambiguous stimuli will tend to reflect the subjects' "confusion" and simultaneous or alternating attraction to both categories; these trajectories typically show more changes of direction and greater divergence from the most direct possible trajectory from the mouse cursor's starting and ending positions. Mouse-tracking has been used to investigate category competition in diverse subdisciplines, including language processing [@spivey; @dale_negated; @farmer], social judgments of White versus Black faces [@wojnowicz; @yu], and social game theory [@kieslich].
+
+Collecting reliable mouse trajectories that are comparable across subjects and trials requires precise control over the visual layout and timing of the experiment, as we will describe. Perhaps for this reason, mouse-tracking experiments to date have usually been conducted in person, with subjects physically present in the lab (with some exceptions, e.g., @freeman_race). Such settings allow for a consistent visual presentation of the experiment through the use of existing mouse-tracking software [@freeman_mousetracker; @mousetrap]. In contrast, collecting mouse-tracking data online, for example through crowd-sourcing websites, could potentially allow for much larger samples, greater demographic diversity [@gosling], and the possibility of implementing the same experiment in multiple collaborating labs without special hardware or software requirements. We are not aware of existing open-source software that is suitable for these settings, that can accommodate common experimental features such as presentation of multiple stimuli and randomization, and that ensures a consistent, validated experimental presentation even when subjects complete the experiments from their own computers.
+
+The present paper therefore provides open-source software enabling reliable and precise design of mouse-tracking experiments through Qualtrics (Provo, UT, last accessed 10-2018), a widespread graphical user interface that is designed for online data collection, requires no programming, and interfaces easily with crowd-sourcing websites such as Amazon Mechanical Turk. Our software pipeline consists of a premade Qualtrics template containing embedded Javascript \color{red}and CSS \color{black} that collect mouse trajectory and time data, along with R code to parse and analyze the data. We present a validation study demonstrating consistent data collection even in relatively uncontrolled online settings and concurrent validity of our methods when benchmarked using previously tested stimuli. 
+
+
+\section{A basic category-competition experiment}
+\label{sec:basic_expt}
+
+In a standard category-competition experiment, the subject views a series of stimuli presented sequentially on separate pages. The subject must categorize each stimulus by clicking on one of two buttons presented on the left and right sides of the window (Figure \ref{fig:diagram}). In our implementation, there is a 569-px horizontal distance between the category buttons and a 485-px vertical distance between the category buttons and the middle of the Next button.  Stimuli are typically chosen such that some fall clearly into one category, while others are ambiguous or difficult to categorize. Such ambiguous stimuli are thought to activate mental representation of both categories simultaneously, leading to dynamic competition [@freeman_more]. This competition manifests in real time as unstable mouse dynamics. That is, because the subject is continuously or alternately attracted to both categories, the mouse trajectory may contain frequent direction changes and may diverge substantially from a direct path from the start position to the location of the button ultimately chosen. 
+
+Specifically, past literature (e.g., @freeman_cue) has used several outcome measures to operationalize category competition through mouse dynamics. More ambiguous stimuli typically increase the number of times the subject's mouse changes directions horizontally (\emph{$x$-flips}). Additionally, compared to unambiguous stimuli, ambiguous stimuli tend to produce trajectories that diverge more from an "ideal trajectory" consisting of a straight line from the subject's initial cursor position to the finally chosen radio button (Figure \ref{fig:diagram}, red dashed line). That is, the \emph{maximum horizontal deviation} between the ideal trajectory and the subject's actual trajectory (Figure \ref{fig:diagram}, red solid line), as well as the \emph{area} between the ideal and actual trajectories (Figure \ref{fig:diagram}, pink shading), are typically larger for ambiguous stimuli. Our implementation calculates these measures using trajectories rescaled to unit length in both the $x$- and $y-$dimensions and calculates the area using Riemann integration. Other outcome measures can include the \emph{maximum speed} of the subject's cursor (ambiguous stimuli tend to produce higher maximum speeds, reflecting abrupt category shifts [@freeman_race]) and the total reaction time for the trial (ambiguous stimuli tend to produce longer reaction times). We calculate reaction time as the time elapsed between the start of the trial, after the page is fully loaded, to the time at which the subject clicks on a button to categorize the stimulus. However, both maximum speed and reaction time have limitations and are perhaps best treated as secondary measures [@freeman_race].
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=110mm]{Figures/Figure 1.jpeg}
+\caption{\label{fig:diagram}Typical outcome measures for category-competition experiments.}
+\end{figure}
+
+
+\section{How to create and analyze an experiment with our software}
+
+Our open-source software provides a user-friendly data collection and analysis pipeline for creating such experiments as follows. First, the user imports into Qualtrics a template questionnaire (\url{https://osf.io/h7tgs/}) implementing the validation study presented below. The key feature is a "block" that presents the stimuli sequentially via Qualtrics' "Loop & Merge" feature; other blocks in the survey can be added or removed as needed. The image URLs in the Loop & Merge can simply be edited through the Qualtrics interface to replace the default stimuli. The first two blocks of the questionnaire contain instructions (Appendix Section \ref{sec:instruct}) and a block of training stimuli that acclimitizes the subject to the experiment and to alert messages designed to optimize subject behavior for mouse-tracking (detailed in Section \ref{sec:opt_behav} below). The key Loop & Merge block contains customized Javascript that activates mouse-tracking\footnote{The Javascript is also available as standalone files for \color{red}the training block (\url{https://osf.io/qj367/}) and for the experimental block (\url{https://osf.io/4bdme/}).\color{black}}. This code requires no modification except that if the default number of training stimuli (6) or real experimental stimuli (10) is changed via Loop & Merge, these numbers must be changed accordingly in the Javascript parameters \texttt{howManyPracticeImages} and \texttt{howManyRealImages} (Table \ref{tb:js_parameters}). Additional parameters that the user can optionally change are listed in Table \ref{tb:js_parameters}. \color{red}The Qualtrics template also contains (in the "Look and Feel" section) a small snippet of CSS that formats the radio buttons.\footnote{The CSS code is also available as a standalone file (\url{https://osf.io/bfc5r/}).} \color{black} The Qualtrics questionnaire is then ready to collect data. 
+
+
+\begin{table}[h]
+\caption{Modifiable Javascript parameters}
+\label{tb:js_parameters}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Variable}             & \textbf{Default}      & \textbf{Meaning}                                      \\ \midrule
+%--
+\texttt{howManyPracticeImages}         & 6    & The number of practice stimuli (for which mouse tracks will not \\&&be recorded)                               \\ \\
+%--
+\texttt{howManyRealImages}               & 10 & The number of experimental stimuli (for which mouse tracks will \\&&be recorded)                               \\ \\
+%--
+\texttt{maxAnswerTime}       & 5000    & The maximum time (ms) that can be spent on a trial. \\&&Trials with longer answer times will receive a "took too long" alert.                                                                   \\ \\
+%--
+\texttt{maxLatency}              & 700 & The maximum time (ms) after trial onset for which subject can \\&&leave mouse position unchanged. \\&&Trials with longer latencies will receive a "started too late" alert. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The raw Qualtrics data will contain columns with continuous records of the subject's mouse coordinates (\texttt{xPos} and \texttt{yPos}), the absolute time (ms since January 1, 1970, 00:00:00 UTC, which is the standard origin time in Javascript) at which these coordinates were recorded (\texttt{t}), the times at which each trial began (\texttt{onReadyTime}), and the times at which the subject made the final selection (\texttt{buttonClickTime}). These variables are recorded with a special character "a" separating the individual recordings, enabling easy parsing in R or another analysis software. That is, \texttt{xPos}, \texttt{yPos}, and \texttt{t} will be sampled as a triplet approximately every 16-18 ms, while \texttt{onReadyTime} and \texttt{buttonClickTime} will have one entry per stimulus. Table \ref{tb:wide_codebook} provides details on these variables, along with additional variables that are collected in the raw Qualtrics data but were not used in the present analyses.  
+
+The R code in \texttt{data\_prep.R} automatically checks the data for idiosyncratic problems (returning a list of suggested subjects to exclude, along with reasons), parses the raw data downloaded from Qualtrics, computes the outcome measures described above, and returns the dataset in an analysis-ready format. Specifically, the code first parses the character-separated strings into a list for each subject, each of which contains a list for each experimental stimulus. For example, a particular subject might have the following $x$-coordinate lists for the first three stimuli (prior to rescaling to unit length):
+
+
+```{r eval=FALSE, asis=TRUE}
+[[1]]
+ [1] 947 946 946 946 946 944 941 938 936 934 932 927 922 916 910
+[16] 908 906 903 899 894 887 880 874 867 859 850 839 829 815 803
+[31] 794 786 777 768 758 750 744 736 728 723 719 717 714 709 703
+[46] 700 696 692 690 689 687 684 681 680 678 676 675 674 672 670
+[61] 669 668 668
+
+[[2]]
+ [1] 972 968 964 960 956 951 946 939 927 917 908 900 888 876 862
+[16] 847 831 816 801 784 772 763 753 743 733 725 721 715 709 704
+[31] 699 696 694 692 689 685 683 682 679 676 675 674 674 673 672
+[46] 671 671
+
+[[3]]
+ [1] 988 987 986 982 977 972 966 961 953 942 927 910 894 878 866
+[16] 849 826 808 792 781 771 761 751 745 741 738 733 729 725 722
+[31] 719 715 710 707 704 701 699 696 693 689 686 685 683 682 681
+[46] 679 678 676 676 676
+```
+
+In the process, the code accounts for possibility or order-randomized Loop & Merge iterates by appropriately reordering the continuously-recorded mouse track data. The outcome measures are computed for each subject and appended to the original dataset in wide form. By default, our analysis code defines the time variable as the time elapsed from the beginning of each trial, specifically the time at which the page was fully loaded. Note that if the trajectories are to be directly averaged rather than used to compute the outcome measures we describe, the times should be standardized to account for differences in the times elapsed for each trial [@freeman_mousetracker], which would be a straightforward modification to our code. Additional outcome measures, such as trajectory curvature [@dale_graded; @wojnowicz; @kieslich] or speed profiles throughout a trial [@freeman_race], could also be easily calculated from the raw coordinate data supplied by the provided R scripts. Finally, the dataset is reshaped into an analysis-friendly long format, such that there is one row for each trial rather than for each subject: 
+
+```{r eval=FALSE, asis=TRUE}
+  id   cat xflips  xdev   area   speed rxnt 
+1  1 Robot      0 0.132 0.0599 0.00295 1048         
+2  2 Robot      0 0.112 0.0577 0.00906  701         
+3  3 Robot      1 0.225 0.1638 0.00776 1184         
+4  4 Robot      2 0.266 0.1473 0.00328 2022         
+5  5 Robot      2 0.254 0.1129 0.00655 1410         
+6  6 Robot      2 0.254 0.1180 0.01493 1037         
+```
+
+
+(Note that the outcome measures are computed using rescaled trajectories, so are unitless.) The code also prints information about alert messages displayed to subjects (discussed in the next section). Although analysis methods will differ by substantive application, we provide an example R file, \texttt{analysis.R}, which conducts the analyses described in Section \ref{sec:validation} below. 
+
+
+\begin{table}[h]
+\caption{Codebook of mouse-tracking and timing variables in raw Qualtrics data}
+\label{tb:wide_codebook}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Variable}             & \textbf{Units}      & \textbf{Meaning}                                      \\ \midrule
+%--
+\texttt{xPos}              & px & $x$-coordinate of cursor relative to upper left-hand \\&&corner of browser window \\ \\
+%--
+\texttt{yPos}              & px & $y$-coordinate of cursor relative to upper left-hand corner \\ \\
+%--
+\texttt{time}              & ms since 1970-01-01 0:00:00 UTC & Time at which each coordinate pair was measured  \\ \\
+%--
+\texttt{onLoadTime}         & ms since 1970-01-01 0:00:00 UTC    &  Time at which page for each trial started loading                         \\ \\
+%--
+\texttt{onReadyTime}               & ms since 1970-01-01 0:00:00 UTC & Time at which the page for each trial \hl{was loaded} \\&&(beginning of trial)                              \\ \\
+%--
+\texttt{buttonClickTime}       & ms since 1970-01-01 0:00:00 UTC    & Time at which subject made category decision \\&&(end of trial)                                                                   \\ \\
+%--
+\texttt{pageSubmitTime}              & ms since 1970-01-01 0:00:00 UTC & Time at which subject proceeded to next trial by \\&&clicking "Next" \\ \\
+%--
+\texttt{windowWidth}              & px & Width of subject's browser window at beginning of trial\\ \\
+%--
+\texttt{windowHeight}              & px & Height of subject's browser window at beginning of trial \\ \\
+%--
+\texttt{alerts}              & N/A & Alerts received during each trial: \\&&0 = none \\&&1 = started too early \\&&2 = started too late \\&&3 = surpassed time limit for trial \\&&4 = window too small to fully display experiment \\ \\
+%--
+\texttt{latency}              & ms & Time between \texttt{onReadyTime} and first mouse move \\ \\
+%--
+\texttt{stimulusOrder}              & N/A & Stimulus URLs for each trial in the order presented to \\&&subject \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Methodological details}
+
+\subsection{Optimizing subject behavior for mouse-tracking}
+\label{sec:opt_behav}
+
+If subjects sometimes make their category decisions prior to moving their mouse cursors -- that is, if they wait to begin moving their cursors until they have already made a decision -- then their mouse trajectories may begin too late to capture dynamic category competition [@freeman_race]. For this reason, at the end of each trial in which the subject took more than 700 ms (by default) to begin moving the cursor, the questionnaire issues a "started too late" alert warning the subject to begin moving the cursor faster at the beginning of each trial. Additionally, to encourage fast decision-making and discourage subjects from taking unscheduled breaks from the experiment, after any trial in which the subject takes longer than 5000 ms (by default) to make a category decision, the questionnaire issues a "took too long" alert reminding the subject to answer more quickly [@freeman_race]. Some investigators choose not to limit total response time (e.g., @kieslich), in which case the parameter \emph{maxLatencyTime} could simply be set to a very large value, such as 50,000 ms. \color{red}To avoid having the alerts disrupt the subject's behavior during the trial, all alerts are displayed immediately after the subject chooses a category, but before the subject clicks the Next button to proceed to the next trial. \color{black} Alert data are recorded for each trial, allowing the user to exclude trials or subjects receiving alerts if desired. 
+
+
+\subsection{Special considerations for online use}
+
+\label{sec:special}
+
+As mentioned, allowing subjects to complete the experiment on their own devices, rather than in a controlled lab setting, poses several challenges to collecting reliable and precise mouse-tracking data. For example, running the experiment through a browser precludes positioning the subject's cursor at the start of each trial (this operation \hl{poses security risks, so is forbidden by browsers}). However, without a fixed starting cursor position, mouse trajectories would not be comparable across trials. For the same reason, the experiment interface must be displayed with the same dimensions for every subject and trial, regardless of the size and resolution of the subject's screen. Additionally, if subjects attempted to complete the experiment with a browser window that is smaller than the size of the the experiment interface (for example, because their device's screen is physically too small), then they may have to scroll in the middle of each trial, leading to non-continuous mouse trajectories.
+
+Our Javascript implementation safeguards against each of these possibilities. To ensure that the cursor always starts in a fixed location, the submit button (the necessary ending point for the cursor on every trial) is positioned in the same location on every trial, and if the subject moves the cursor away from this position before the next trial begins (i.e., while the page is loading), the questionnaire issues a "started too early" alert warning the subject not to begin moving the cursor before the page is loaded. The placement of the Next button, stimulus, and category decision buttons always assumes fixed pixel dimensions (e.g., the horizontal and vertical distances from the center of the Next button to each category button are fixed at 183 px and 485 px, respectively), and during the first training trial, the size of the subject's browser window is checked. If the browser window is smaller than the experiment interface, the questionnaire issues an alert instructing the subject to increase the window size until the stimulus image, both radio buttons, and the submit button are fully visible. On subsequent trials, the subject's ability to scroll is disabled, such that subjects using devices with too-small screens will not be able to proceed through the experiment.
+
+The use of fixed pixel dimensions does not, however, guarantee that the visual distance between the buttons will be the same for every subject. For example, computer monitors with higher resolutions will have more pixels per inch, meaning that visual distances between the buttons will be somewhat smaller. Alternatively, some subjects might zoom in \color{red}or out \color{black} on the browser window, increasing both the pixel distances and the visual distances. Therefore, our R analysis code by default rescales all trajectories to unit length in both the $x$- and $y$-dimensions. However, the validation study described in Section \ref{sec:validation} below suggested that even after rescaling the trajectories, subjects \color{red}with trajectories suggesting non-standard pixel scaling due, for example, to zooming \color{black} typically showed larger values of the outcome measures \color{red}but nevertheless showed similar effects of stimulus ambiguity\color{black}. 
+
+In practice, \color{red}as we do in the validation study below \color{black}, investigators might choose to adjust analysis models for covariates indicating \color{red}that a subject had non-standard pixel scaling \color{black} and whether a subject had ever had a too-small window. Alternatively, such subjects could simply be excluded. The provided R code automatically includes these two indicator variables in the prepared \color{red}long-format dataset (called `weird.scaling` and `wts`, respectively).\color{black}
+
+\subsection{Limitations}
+
+Our implementation has limitations. Occasional idiosyncrasies (e.g., extremely poor quality connections, use of proxy servers) can cause data losses for some trials or subjects. Our R code automatically checks for subjects with these data losses and creates a list of subject IDs that should be excluded, along with reasons for exclusion. The validation study presented below suggested that these issues affect a small fraction of trials for approximately 10% of subjects when data are collected in an uncontrolled crowdsourcing setting. A conservative analysis approach, which we adopt in the validation study, would be to exclude all trials for these subjects. Additionally, although our implementation performs reliably across all common browsers, it is incompatible with Internet Explorer; subjects running Internet Explorer will be unable to proceed through the questionnaire, and no data will be collected. Finally, subjects with very slow Internet connections may receive a large number of "started too late" alerts, although their data will otherwise be useable. In practice, subjects with a high frequency of "started too late" alerts could be discarded if this is of concern. 
+
+
+\section{Validation study}
+\label{sec:validation}
+
+\subsection{Design}
+To validate the provided software, we used the provided software to design a simple category confusion experiment using image stimuli portraying the faces of humanoid robots ranging from very mechanical to very humanlike. Previous work (e.g., @uv2, @mathur2009) suggests that humanoid robot faces that closely, but imperfectly, resemble humans -- those occupying the "Uncanny Valley" [@mori] -- can provoke intense feelings of eeriness, dislike, and distrust in human viewers. One mechanism of these negative reactions may be that robots occupying the Uncanny Valley provoke category confusion, which may itself be aversive [@yamada]. In partial support for this hypothesis, @uv2 found that robot faces in the Uncanny Valley elicited the most category confusion. As a validation, we attempted to conceptually reproduce @uv2's findings using the mouse-tracking software presented here. From @uv2's stimuli, we \color{red}arbitrarily  \color{black}selected five "non-ambiguous" faces not occupying the Uncanny Valley (Figure \ref{fig:traj}, row 1) and five "ambiguous" faces occupying the Uncanny Valley (Figure \ref{fig:traj}, row 2). Given previous findings regarding these faces [@uv2], we expected mouse trajectories to indicate greater average confusion for ambiguous faces vs. unambiguous faces. We analyzed mouse trajectories from n = `r nrow(d)` United States subjects\footnote{We collected data on `r initial.n` subjects (using an \emph{a priori} sample size determination of $n=200$) and excluded `r table(exclusions$reason)[["Idiosyncratic timing issues caused missing times or outcome variable data."]] + table(exclusions$reason)[["Implausibly few (<5) coordinate or time entries for some stimuli."]]` due to idiosyncratic timing issues. These exclusion criteria are conservative in that we excluded all trials for any subject with these problems on any trial, even if only a small number of trials were affected.} recruited on Amazon Mechanical Turk, who used the template Qualtrics questionnaire provided here to categorize each face (presented in randomized order) as either a "robot" or a "human". A link to a live demonstration version of the questionnaire is provided at \url{https://osf.io/st2ef/}.
+
+
+\subsection{Statistical analysis}
+
+We regressed each outcome listed in Section \ref{sec:basic_expt} on a binary indicator for stimulus ambiguity. Regression models were semiparametric generalized estimating equations (GEE) models with a working exchangeable correlation structure and robust inference, and the unit of analysis was trials (`r nrow(l)` observations). We chose this specification in order to account for arbitrary correlation structures within subjects and within stimuli, as well as to avoid making distributional assumptions on the residuals for highly-skewed outcomes such as reaction time.  Models for continuous outcomes used the identity link, while the model for $x$-flips used the Poisson link. We included additional covariates to account for residual variation in the physical display of the experiment that may remain despite the precautions described in Section \ref{sec:special} above. Specifically, before unit-scaling the trajectories, we assessed whether each subject had ever zoomed in or out on the display (based on unexpectedly large or small pixel distances between the starting and ending $x$-coordinates) as well as whether each subject had ever received a "window too small" alert. To control for these sources of variation, each outcome model included main effects for zooming and for having a small window, as well as all possible interactions among these nuisance variables and the stimulus ambiguity indicator\footnote{As a sensitivity analysis, we also performed the analyses excluding all such subjects (for an analyzed $n=170$), yielding nearly identical results.}.  
+
+
+\subsection{Results}
+
+\color{red}Across all trials, the median reaction time was `r my_round( median(l$rxnt), 0 )` ms ($25^{th}$ percentile: `r my_round( quantile(l$rxnt, 0.25), 0 )` ms; $75^{th}$ percentile: `r my_round( quantile(l$rxnt, 0.75), 0 )` ms). The average latency (the time elapsed between the beginning of the trial and the subject's first mouse movement) was `r my_round( median(lats), 0 )` ms ($25^{th}$ percentile: `r my_round( quantile(lats, 0.25), 0 )` ms; $75^{th}$ percentile: `r my_round( quantile(lats, 0.75), 0 )` ms), which was short enough to suggest that the mouse trajectories would capture dynamic competition processes occurring almost immediately after stimulus presentation. \color{black}
+
+As a visual example \color{red}of the mouse trajectories \color{black}, Figure \ref{fig:traj} shows unit-scaled trajectories from the fifth subject. \color{red}For this subject,  \color{black} ambiguous faces 6, 8, and 9 in particular elicited mouse trajectories characteristic of substantial category confusion, evidenced by $x$-flips and large deviations from the ideal trajectory. (The reason for the rightward trajectory for face 7 is that the subject classified this face as "Human", whereas all the other faces were classified as "Robot".) Figure \ref{fig:violin} aggregates outcome data across subjects, suggesting visually that each outcome measure was on average higher for ambiguous versus unambiguous stimuli, as expected.  Point estimates (Figure \ref{fig:violin}) were in the predicted direction for all stimuli (with $p < 10^{-8}$ for $x$-flips, maximum horizontal deviation, reaction time, and speed, and $p = 0.0004$ for area). As a global measure of validation success across the five outcome measures, we observed more point estimates in the predicted direction than predicted by chance ($p = 0.5^{5} = 0.03$). These results suggest that the software and methods presented here adequately capture confusion when implemented through realistic crowdsourced data collection. 
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=150mm]{figures/Figure 2.jpeg}
+\caption{\label{fig:traj}Mouse trajectories for a single subject categorizing unambiguous (top row) versus ambiguous (bottom row) humanoid robot faces. \color{red}Trajectories have been rescaled to unit length in both the $x$- and $y$-dimensions.\color{black}}
+\end{figure}
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=150mm]{figures/violin_plots.pdf}
+\caption{\label{fig:violin}Violin plots showing outcome data for 1880 trials (188 subjects) for ambiguous versus unambiguous face stimuli. Violin contours are mirrored kernel density estimates. Horizontal lines within violins are medians. $\widehat{\beta}$ = GEE estimate of mean difference (ambiguous - unambiguous); $p$ = $p$-value for difference estimated by robust GEE inference.}
+\end{figure}
+
+
+
+
+\section{To do}
+
+* Windows vs. Mac experiment display size
+
+* Read Daz's code 
+
+* Say how we chose stimuli
+
+
+* Download qsf file again without extra CSS and update live questionnaire link in Read-Me
+
+
+\section{Reproducibility}
+
+All data, code, and materials required to reproduce the validation study are publicly available and documented (\url{https://osf.io/st2ef/}).
+
+
+\section{Acknowledgments}
+
+MM was supported by NIH grant R01 CA222147. The funders had no role in the design, conduct, or reporting of this research. We thank Jackson Walters for helpful discussions and for providing open-source Javascript that helped us develop our software [@jackson_git].
+
+
+\newpage
+
+\section{Appendix}
+
+\subsection{Qualtrics instructions to subjects}
+\label{sec:instruct}
+
+
+You will be shown a series of faces, one at a time, and you should decide whether each is a robot or a human by clicking one of the two answer buttons at the top of the window. We are recording the speed and accuracy of your answers, so please answer as quickly and accurately as possible even though some faces may be hard to categorize. To speed up your answer, you should begin moving the cursor very soon after the face is displayed (within 1/2 second), even if you have not yet fully decided which answer you will choose. However, it is important that you do not begin moving the cursor until the face appears on the screen -- the cursor must begin the next question positioned over the Next button, so after clicking "Next", do not move the mouse while you’re waiting for the next face to be displayed.
+
+We understand it can be tricky for you to move the cursor quickly, but not too quickly, on every single question, and we will issue alerts to let you know when the timing isn’t correct. Please don’t be stressed by these alerts; they are just meant to help you improve your timing.
+
+After you click the "Next" button on this page, you will begin a series of 6 practice faces (labeled "Practice") to familiarize yourself with the task. Then you will go directly into the actual task.
+
+This entire task needs to be done in a single sitting, which should take about 3 minutes. Also, you must not use a touchscreen device to complete this task (a physical mouse or trackpad, as on a laptop, is fine). 
+
+\newpage
+
+\section*{References}
+
+
