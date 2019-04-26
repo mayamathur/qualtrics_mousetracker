@@ -5,7 +5,7 @@ This repository contains an open-source pipeline to collect and analyze mouse-tr
 
 > Mathur MB & Reichling D (in press). Open-source software for mouse-tracking in Qualtrics to measure category competition. *Behavior Research Methods.* Preprint: [https://osf.io/ymxau](https://osf.io/ymxau).
 
-A live demo version of the questionnaire used in the validation study [is available here](https://stanforduniversity.qualtrics.com/jfe/form/SV_6WsoglnHLBUA2YB).
+A live demo version of the questionnaire used in the validation study [is available here](https://stanforduniversity.qualtrics.com/jfe/form/SV_6WsoglnHLBUA2YB). The code is version-controlled [via Github](https://github.com/mayamathur/qualtrics_mousetracker). 
 
 
 ## How to use the software to design a category-competition experiment
