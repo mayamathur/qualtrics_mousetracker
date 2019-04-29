@@ -41,6 +41,10 @@ Simply do a Find & Replace of the relevant variable name in the file `general_he
 
 Don't worry! This occurs because Excel has limits on the maximum number of characters per cell, and if you have many stimuli in the Loop & Merge, it's possible that the mouse-tracking data strings exceed these limits. This is not a problem for the R data prep and analysis code because the data will be read in as a .csv file, which has no limits on characters per entry. If you decide to analyze the data from scratch rather than using the provided R scripts, keep in mind that you should read in the data as a .csv instead of from Excel for this reason. 
 
+## What is the code doing under the hood?
+
+As an example of what happens under the hood when running the code to parse the mouse-tracking data, see [uv3_code_self_audit.R](https://osf.io/9574n/), where we "manually" parse the cursor data for a single subject and face, showing how we arrive at exactly the same results as the code provided here. 
+
 
 ## Software updates and bug fixes
 
