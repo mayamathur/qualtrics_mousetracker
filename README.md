@@ -16,7 +16,7 @@ What follows is an abbreviated version of the instructions in the preprint, [Mat
 
 2. In Qualtrics, click on the "JS" (Javascript) icon in the training block. Edit the parameters `howManyPracticesImages` and `howManyRealImages` to match the number of stimuli you have in the training block and the main ("Categorize faces") block. If desired, edit the other timing parameters (described in [Mathur & Reichling (in press)](https://osf.io/ymxau)).
 
-3. Collect data as usual through Qualtrics. We highly recommend that you collect pilot data on yourself and "analyze" it as below before collecting real data; this will help ensure that your survey is set up correctly. 
+3. Collect data as usual through Qualtrics. We highly recommend that you collect pilot data on yourself and "analyze" it as below before collecting real data; this will help ensure that your survey is set up correctly especially if you made any changes to the survey designs. 
 
 4. Download the raw Qualtrics dataset. Run [the data prep R script](https://osf.io/xb8cq/) to check for subjects who should probably be excluded, to parse the coordinate data, and to return the dataset in an analysis-friendly long format (1 row per trial). 
 
@@ -41,14 +41,18 @@ Simply do a Find & Replace of the relevant variable name in the file `general_he
 
 Don't worry! This occurs because Excel has limits on the maximum number of characters per cell, and if you have many stimuli in the Loop & Merge, it's possible that the mouse-tracking data strings exceed these limits. This is not a problem for the R data prep and analysis code because the data will be read in as a .csv file, which has no limits on characters per entry. If you decide to analyze the data from scratch rather than using the provided R scripts, keep in mind that you should read in the data as a .csv instead of from Excel for this reason. 
 
+## Caveats
+
+* This software is designed for surveys in which there is no missing data; i.e., subjects are not allowed to skip questions. If subjects are allowed to skip questions, all of their data will be removed. 
+
+* This software is not currently designed to handle surveys with multiple "blocks" of stimuli. The Javascript will overwrite the onReadyTime, xPos, yPos, and time coordinate vectors at the beginning of each block, so only data from the last block will be saved.  
+
 ## What is the code doing under the hood?
 
 As an example of what happens under the hood when running the code to parse the mouse-tracking data, see [uv3_code_self_audit.R](https://osf.io/9574n/), where we "manually" parse the cursor data for a single subject and face, showing how we arrive at exactly the same results as the code provided here. 
 
 
 ## Software updates and bug fixes
-
-2019-5-13: Generalized `general_helper.R` to accommodate Qualtrics surveys with multiple blocks of stimuli. 
 
 2018-12-8: Generalized `data_prep.R` code for excluding subjects with missing cells to accommodate questionnaires not ending with the default demographics block. 
 
