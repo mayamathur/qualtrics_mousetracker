@@ -16,7 +16,7 @@ What follows is an abbreviated version of the instructions in the preprint, [Mat
 
 2. In Qualtrics, click on the "JS" (Javascript) icon in the training block. Edit the parameters `howManyPracticesImages` and `howManyRealImages` to match the number of stimuli you have in the training block and the main ("Categorize faces") block. If desired, edit the other timing parameters (described in [Mathur & Reichling (in press)](https://osf.io/ymxau)).
 
-3. Collect data as usual through Qualtrics. 
+3. Collect data as usual through Qualtrics. We highly recommend that you collect pilot data on yourself and "analyze" it as below before collecting real data; this will help ensure that your survey is set up correctly. 
 
 4. Download the raw Qualtrics dataset. Run [the data prep R script](https://osf.io/xb8cq/) to check for subjects who should probably be excluded, to parse the coordinate data, and to return the dataset in an analysis-friendly long format (1 row per trial). 
 
