@@ -56,7 +56,7 @@ As an example of what happens under the hood when running the code to parse the 
 
 ## How to reproduce the validation study
 
-The validation study used [the template Qualtrics questionnaire](https://osf.io/jm4kc/) and the same R scripts linked above. Additional materials, such as the stimuli, are in the "Validation study" directory.  
+The validation study used [the template Qualtrics questionnaire](https://osf.io/jm4kc/) and the same R scripts linked above. Additional materials, such as the stimuli, are in the "Validation study" directory. For full reproducibility, a copy of the exact code we used to produce the results in the manuscript is available in the directory "Code archive from time of publication", but note that this may no longer be the most updated version of the code that you should use if analyzing your own data.  
 
 
 
