@@ -48,6 +48,8 @@ As an example of what happens under the hood when running the code to parse the 
 
 ## Software updates and bug fixes
 
+2019-5-13: Generalized `general_helper.R` to accommodate Qualtrics surveys with multiple blocks of stimuli. 
+
 2018-12-8: Generalized `data_prep.R` code for excluding subjects with missing cells to accommodate questionnaires not ending with the default demographics block. 
 
 2018-11-21: Updated CSS to ensure fixed distance between radio buttons. 
