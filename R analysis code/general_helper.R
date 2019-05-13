@@ -301,6 +301,12 @@ reorder_random_thing = function( randomized.urls,
                                  key.urls,
                                  x ) {  
   
+  # accommodate multiple blocks of trials
+  # if survey is set up that way, with different stimuli
+  #  in each block, then key.urls will be longer than randomized.urls
+  #  so we need to keep only the ones with matches
+  key.urls = key.urls[ key.urls %in% randomized.urls ]
+  
   library(plyr)
   inds = vapply( as.character(key.urls), 
                  function(i) which( randomized.urls == as.character(i) ),
